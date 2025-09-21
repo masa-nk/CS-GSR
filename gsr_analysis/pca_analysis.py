@@ -4,25 +4,18 @@ from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import os
+from utils import load_user_data # ユーティリティ関数をインポート
 
-def perform_pca_and_visualize():
+def perform_pca_and_visualize(data_dir, output_filename='pca_plot.png'):
     """
-    GSRデータを読み込み、PCAを実行して3Dプロットを生成・保存する。
+    指定されたディレクトリからGSRデータを読み込み、PCAを実行して3Dプロットを生成・保存する。
     """
     # --- データの読み込み ---
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    path_A = os.path.join(current_dir, 'method_A.csv')
-    path_B = os.path.join(current_dir, 'method_B.csv')
-
-    df_A = pd.read_csv(path_A)
-    df_B = pd.read_csv(path_B)
-
-    # 採取方法を識別するカラムを追加
-    df_A['Method'] = 'A'
-    df_B['Method'] = 'B'
-
-    # データを結合
-    df_combined = pd.concat([df_A, df_B], ignore_index=True)
+    try:
+        df_combined = load_user_data(data_dir)
+    except FileNotFoundError as e:
+        print(e)
+        return
 
     # 特徴量とターゲットを分離
     features = df_combined.drop('Method', axis=1)
@@ -59,9 +52,13 @@ def perform_pca_and_visualize():
     ax.grid(True)
 
     # プロットを画像ファイルとして保存
-    output_path = os.path.join(current_dir, 'pca_plot.png')
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    output_path = os.path.join(current_dir, output_filename)
     plt.savefig(output_path)
     print(f"PCA plot saved to {output_path}")
 
 if __name__ == "__main__":
-    perform_pca_and_visualize()
+    # このスクリプトを直接実行する場合のデフォルトの動作
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    user_data_directory = os.path.join(base_dir, 'user_data')
+    perform_pca_and_visualize(user_data_directory)

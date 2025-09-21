@@ -5,26 +5,22 @@ from sklearn.metrics import accuracy_score, confusion_matrix, classification_rep
 import seaborn as sns
 import matplotlib.pyplot as plt
 import os
+from utils import load_user_data # ユーティリティ関数をインポート
 
-def perform_similarity_analysis():
+def perform_similarity_analysis(data_dir, output_filename='confusion_matrix.png'):
     """
-    2つのGSRデータセットを読み込み、ランダムフォレストで分類し、
+    指定されたディレクトリからGSRデータを読み込み、ランダムフォレストで分類し、
     その性能を評価することで類似性を分析する。
     """
     # --- データの読み込み ---
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    path_A = os.path.join(current_dir, 'method_A.csv')
-    path_B = os.path.join(current_dir, 'method_B.csv')
+    try:
+        df_combined = load_user_data(data_dir)
+    except FileNotFoundError as e:
+        print(e)
+        return
 
-    df_A = pd.read_csv(path_A)
-    df_B = pd.read_csv(path_B)
-
-    # 採取方法を識別する数値ラベルを追加 (A: 0, B: 1)
-    df_A['Method'] = 0
-    df_B['Method'] = 1
-
-    # データを結合
-    df_combined = pd.concat([df_A, df_B], ignore_index=True)
+    # 分類のためにMethodを数値に変換 (A: 0, B: 1)
+    df_combined['Method'] = df_combined['Method'].map({'A': 0, 'B': 1})
 
     # 特徴量とターゲットを分離
     X = df_combined.drop('Method', axis=1)
@@ -61,17 +57,12 @@ def perform_similarity_analysis():
     plt.xlabel('Predicted Label')
 
     # 混同行列を画像ファイルとして保存
-    output_path = os.path.join(current_dir, 'confusion_matrix.png')
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    output_path = os.path.join(current_dir, output_filename)
     plt.savefig(output_path)
     print(f"\nConfusion matrix plot saved to {output_path}")
 
 if __name__ == "__main__":
-    # seabornも使うのでインストール
-    try:
-        import seaborn
-    except ImportError:
-        import pip
-        pip.main(['install', 'seaborn'])
-        import seaborn
-
-    perform_similarity_analysis()
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    user_data_directory = os.path.join(base_dir, 'user_data')
+    perform_similarity_analysis(user_data_directory)
